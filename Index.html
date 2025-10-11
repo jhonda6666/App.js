@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apartment Application Fee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-overlay {
+            transition: opacity 0.3s ease;
+        }
+        .modal-container {
+            transition: transform 0.3s ease;
+        }
+        .hidden {
+            display: none;
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        /* Style for the generated content to format lists correctly */
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+        }
+        .prose h4 {
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+    <div class="text-center bg-white p-8 sm:p-12 rounded-xl shadow-lg max-w-md w-full mx-4">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">Pay Your Application Fee</h1>
+        <p class="text-gray-600 mb-8">
+            To finalize your apartment application, please click the button below to pay the application fee using Cash App.
+        </p>
+        
+        <button id="payButton"
+           class="inline-block bg-green-500 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75 transition-transform transform hover:scale-105">
+            Pay with Cash App
+        </button>
+        
+        <p class="text-xs text-gray-500 mt-6">
+            You can scan or click the QR code.
+        </p>
+    </div>
+
+    <div id="geminiFeatures" class="hidden w-full max-w-md mx-4 mt-8">
+        <h2 class="text-2xl font-bold text-gray-800 text-center mb-6">Next Steps</h2>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Confirm Your Payment</h3>
+            <p class="text-gray-600 mb-4">Generate a polite confirmation email to send to the property manager.</p>
+            <button id="generateEmailBtn" class="w-full flex items-center justify-center bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition">
+                <span class="btn-text">✨ Draft Confirmation Email</span>
+            </button>
+            <div id="emailResultContainer" class="hidden mt-4">
+                <textarea id="emailTextarea" readonly class="w-full h-40 p-3 bg-gray-100 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <button id="copyEmailBtn" class="mt-2 w-full bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition">Copy to Clipboard</button>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Discover Your New Neighborhood</h3>
+            <p class="text-gray-600 mb-4">Get a quick guide to local spots in Hondo, TX to get excited about your new home.</p>
+            <button id="generateGuideBtn" class="w-full flex items-center justify-center bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75 transition">
+                <span class="btn-text">✨ Explore Hondo, TX</span>
+            </button>
+            <div id="guideResultContainer" class="hidden mt-4 p-4 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 prose"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Plan Your Move</h3>
+            <p class="text-gray-600 mb-4">Select a target move-in date and we'll generate a personalized moving checklist to keep you organized.</p>
+            <input type="date" id="moveInDate" class="w-full p-2 border border-gray-300 rounded-lg mb-4">
+            <button id="generateChecklistBtn" class="w-full flex items-center justify-center bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75 transition">
+                <span class="btn-text">✨ Create Moving Checklist</span>
+            </button>
+            <div id="checklistResultContainer" class="hidden mt-4 p-4 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 prose"></div>
+        </div>
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Meet Your Neighbors</h3>
+            <p class="text-gray-600 mb-4">Break the ice! Generate a short, friendly note to introduce yourself to your new neighbors.</p>
+            <button id="generateNoteBtn" class="w-full flex items-center justify-center bg-orange-500 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-75 transition">
+                <span class="btn-text">✨ Draft Friendly Note</span>
+            </button>
+            <div id="noteResultContainer" class="hidden mt-4 p-4 bg-gray-100 border border-gray-300 rounded-lg text-gray-700 prose italic"></div>
+        </div>
+    </div>
+
+    <div id="qrModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-60 modal-overlay opacity-0 pointer-events-none">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm text-center p-6 sm:p-8 modal-container transform scale-95">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-800">Scan or Click to Pay</h2>
+                <button id="closeButton" class="text-gray-400 hover:text-gray-600 text-3xl leading-none">&times;</button>
+            </div>
+            <p class="text-gray-600 mb-4">Open Cash App and scan the QR code, or simply click the code to pay directly.</p>
+            
+            <a href="https://cash.app/$YourCashtag" target="_blank" rel="noopener noreferrer" class="block">
+                <img src="https://i.imgur.com/Jk85h25.png" alt="Cash App QR Code - Click to pay" class="mx-auto rounded-lg border-4 border-gray-200 hover:opacity-80 transition-opacity">
+            </a>
+            <p class="text-sm font-semibold text-gray-700 mt-4">$YourCashtag</p>
+        </div>
+    </div>
+
+    <script>
+        const payButton = document.getElementById('payButton');
+        const closeButton = document.getElementById('closeButton');
+        const qrModal = document.getElementById('qrModal');
+        const geminiFeatures = document.getElementById('geminiFeatures');
+        
+        // Feature 1: Email
+        const generateEmailBtn = document.getElementById('generateEmailBtn');
+        const emailResultContainer = document.getElementById('emailResultContainer');
+        const emailTextarea = document.getElementById('emailTextarea');
+        const copyEmailBtn = document.getElementById('copyEmailBtn');
+
+        // Feature 2: Guide
+        const generateGuideBtn = document.getElementById('generateGuideBtn');
+        const guideResultContainer = document.getElementById('guideResultContainer');
+        
+        // Feature 3: Checklist
+        const generateChecklistBtn = document.getElementById('generateChecklistBtn');
+        const checklistResultContainer = document.getElementById('checklistResultContainer');
+        const moveInDateInput = document.getElementById('moveInDate');
+
+        // Feature 4: Neighbor Note
+        const generateNoteBtn = document.getElementById('generateNoteBtn');
+        const noteResultContainer = document.getElementById('noteResultContainer');
+
+        // 🚨 ACTION REQUIRED: INSERT YOUR GEMINI API KEY HERE 🚨
+        const apiKey = "YOUR_GEMINI_API_KEY_HERE"; 
+
+        // Set default move-in date to two weeks from today
+        const today = new Date();
+        const twoWeeksFromNow = new Date(today.setDate(today.getDate() + 14));
+        moveInDateInput.value = twoWeeksFromNow.toISOString().split('T')[0];
+
+        // --- Modal Logic ---
+        function openModal() {
+            qrModal.classList.remove('opacity-0', 'pointer-events-none');
+            qrModal.querySelector('.modal-container').classList.remove('scale-95');
+            geminiFeatures.classList.remove('hidden'); 
+        }
+
+        function closeModal() {
+            qrModal.classList.add('opacity-0');
+            qrModal.querySelector('.modal-container').classList.add('scale-95');
+            setTimeout(() => qrModal.classList.add('pointer-events-none'), 300);
+        }
+
+        payButton.addEventListener('click', openModal);
+        closeButton.addEventListener('click', closeModal);
+        qrModal.addEventListener('click', (event) => {
+            if (event.target === qrModal) closeModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeModal();
+        });
+        
+        // --- Gemini API Call Logic ---
+        function setButtonLoading(button, isLoading) {
+            const btnText = button.querySelector('.btn-text');
+            if (isLoading) {
+                // Store original text before replacing it with the spinner
+                button.dataset.originalText = btnText.innerHTML; 
+                button.disabled = true;
+                btnText.innerHTML = `<svg class="spinner h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10" stroke-width="4" stroke="currentColor" class="opacity-25"></circle><path d="M12 2a10 10 0 0110 10" stroke-width="4" stroke="currentColor" class="opacity-75"></path></svg> Generating...`;
+            } else {
+                button.disabled = false;
+                // Restore original text from the stored data attribute
+                btnText.innerHTML = button.dataset.originalText;
+            }
+        }
+
+        async function callGemini(payload) {
+             // Check if API Key is set
+             if (apiKey === "YOUR_GEMINI_API_KEY_HERE" || apiKey === "") {
+                 return "🚨 Error: Please update the 'apiKey' variable in the script with your actual Gemini API Key to enable this feature.";
+             }
+             
+             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+             try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
+                const result = await response.json();
+                return result.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response. Please try again.";
+             } catch (error) {
+                 console.error("Gemini API call failed:", error);
+                 return "An error occurred while contacting the AI. Please check the console for details.";
+             }
+        }
+
+        function formatGeminiResponse(text) {
+            // A simple markdown to HTML converter for lists and bold text
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<h4>$1</h4>') // Bold **text** to h4 for titles
+                .replace(/^\* (.*$)/gm, '<ul><li>$1</li></ul>') // Bullets * text to ul/li
+                .replace(/<\/ul>\n<ul>/g, ''); // Join consecutive lists
+        }
+        
+        // --- Feature 1: Email Generation ---
+        async function handleGenerateEmail() {
+            // Save original text if not already saved
+            if (!generateEmailBtn.dataset.originalText) {
+                generateEmailBtn.dataset.originalText = generateEmailBtn.querySelector('.btn-text').innerHTML;
+            }
+            setButtonLoading(generateEmailBtn, true);
+            emailResultContainer.classList.add('hidden');
+            const payload = {
+                contents: [{ parts: [{ text: "Draft a short, polite email to a property manager confirming I just paid the apartment application fee and expressing my continued interest in the property. Keep it under 75 words." }] }],
+                systemInstruction: { parts: [{ text: "You are a helpful assistant for drafting concise, professional emails." }] },
+            };
+            const generatedText = await callGemini(payload);
+            emailTextarea.value = generatedText;
+            emailResultContainer.classList.remove('hidden');
+            setButtonLoading(generateEmailBtn, false);
+        }
+
+        copyEmailBtn.addEventListener('click', () => {
+            emailTextarea.select();
+            // Use modern Clipboard API if available, fallback to execCommand
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(emailTextarea.value).then(() => {
+                    copyEmailBtn.textContent = 'Copied!';
+                    setTimeout(() => { copyEmailBtn.textContent = 'Copy to Clipboard'; }, 2000);
+                }).catch(err => {
+                    console.error('Could not copy text: ', err);
+                });
+            } else {
+                 // Fallback method
+                 document.execCommand('copy');
+                 copyEmailBtn.textContent = 'Copied!';
+                 setTimeout(() => { copyEmailBtn.textContent = 'Copy to Clipboard'; }, 2000);
+            }
+        });
+
+        // --- Feature 2: Guide Generation ---
+        async function handleGenerateGuide() {
+            if (!generateGuideBtn.dataset.originalText) {
+                generateGuideBtn.dataset.originalText = generateGuideBtn.querySelector('.btn-text').innerHTML;
+            }
+            setButtonLoading(generateGuideBtn, true);
+            guideResultContainer.classList.add('hidden');
+            const payload = {
+                contents: [{ parts: [{ text: "Generate a short, welcoming summary (around 120 words) of Hondo, Texas for someone who just applied for an apartment there. Mention one popular local restaurant, a nice park or outdoor space, and a unique local point of interest." }] }],
+                // The crucial tool for getting up-to-date local info
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: "You are a friendly local guide providing a brief, welcoming overview of a town for a new resident, based on real-time information." }] },
+            };
+            const generatedText = await callGemini(payload);
+            // Replace newlines with <br> for simple HTML display
+            guideResultContainer.innerHTML = generatedText.replace(/\n/g, '<br>');
+            guideResultContainer.classList.remove('hidden');
+            setButtonLoading(generateGuideBtn, false);
+        }
+        
+        // --- Feature 3: Checklist Generation ---
+        async function handleGenerateChecklist() {
+            const moveInDate = moveInDateInput.value;
+            if (!moveInDate) {
+                alert("Please select a move-in date.");
+                return;
+            }
+            if (!generateChecklistBtn.dataset.originalText) {
+                generateChecklistBtn.dataset.originalText = generateChecklistBtn.querySelector('.btn-text').innerHTML;
+            }
+            setButtonLoading(generateChecklistBtn, true);
+            checklistResultContainer.classList.add('hidden');
+            const payload = {
+                contents: [{ parts: [{ text: `Create a moving checklist for a 1-bedroom apartment with a target move-in date of ${moveInDate}. Use markdown format. Structure it with clear timeline headings (like '4 Weeks Out', '1-2 Weeks Out', 'Moving Week', 'Moving Day'). Include key tasks like booking movers, changing address, setting up utilities, and packing essentials.` }] }],
+                systemInstruction: { parts: [{ text: "You are an organized assistant who creates clear, actionable checklists." }] },
+            };
+            const generatedText = await callGemini(payload);
+            // Use the markdown formatter utility
+            checklistResultContainer.innerHTML = formatGeminiResponse(generatedText);
+            checklistResultContainer.classList.remove('hidden');
+            setButtonLoading(generateChecklistBtn, false);
+        }
+        
+        // --- Feature 4: Neighbor Note Generation ---
+        async function handleGenerateNote() {
+            if (!generateNoteBtn.dataset.originalText) {
+                generateNoteBtn.dataset.originalText = generateNoteBtn.querySelector('.btn-text').innerHTML;
+            }
+            setButtonLoading(generateNoteBtn, true);
+            noteResultContainer.classList.add('hidden');
+            const payload = {
+                contents: [{ parts: [{ text: "Draft a short, friendly, and casual note (around 50 words) to introduce myself to my new neighbors. Mention I just moved in and I'm looking forward to meeting them. Include a unique, friendly detail to make it memorable, like offering to share baked goods or mentioning a friendly pet." }] }],
+                systemInstruction: { parts: [{ text: "You are a creative and friendly writer who crafts warm, welcoming messages." }] },
+            };
+            const generatedText = await callGemini(payload);
+            noteResultContainer.innerHTML = generatedText.replace(/\n/g, '<br>');
+            noteResultContainer.classList.remove('hidden');
+            setButtonLoading(generateNoteBtn, false);
+        }
+
+        // --- Event Listeners ---
+        generateEmailBtn.addEventListener('click', handleGenerateEmail);
+        generateGuideBtn.addEventListener('click', handleGenerateGuide);
+        generateChecklistBtn.addEventListener('click', handleGenerateChecklist);
+        generateNoteBtn.addEventListener('click', handleGenerateNote);
+    </script>
+</body>
+</html>
+<script src="app.js"></script>
